@@ -153,7 +153,7 @@ for file_name, ciphertext in ciphertexts:
     print("Plaintext:", plaintext)
     print(f"Decryption time: {elapsed_time:.4f} seconds")
 """
-def generate_ciphertext(suspected_keylen):
+def generate_ciphertext(suspected_keylen = -1):
     ciphertext = ""
     fname = ""
     for i in range(1, 6):
@@ -182,7 +182,7 @@ def parse_file(filename, suspected_keylen = -1):
         output = output[:-1*amount_to_cut]
         return output
 
-for i in range(16, 120):
+for i in range(16, 80): #this tests for all suspected key lengths, does not have to be a for loop though
     ciphertext = generate_ciphertext(i)
     monograms = load_monograms("swedish_monograms.txt")
     start_time = time.time()
@@ -192,7 +192,7 @@ for i in range(16, 120):
     elapsed_time = end_time - start_time
 
     #print(f"\nFile: {file_name}")
-    if key_len >= 16:
+    if key_len >= 16: #most junk results are 1 character, this filters most of them
         print("Key length:", key_len)
         print("Key:", key)
         print("Plaintext:", plaintext)

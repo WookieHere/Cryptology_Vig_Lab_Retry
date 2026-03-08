@@ -12,10 +12,12 @@ class key_loc_pair:
 
     def print_pair(self, masking_val = 0):
         if self.count > masking_val:
-            print("key:       ", self.key)
-            print("count:     ", self.count)
-            print("locations: ", self.locations)
-            print("min_dist:  ", self.analyze_dist())
+            distances = self.analyze_dist()
+            print("key:         ", self.key)
+            print("count:       ", self.count)
+            print("locations:   ", self.locations)
+            print("2 min_dist:  ", distances[0:2])
+            print("dist between repeats: ", distances[2])
             print("--------------------")
     
     def analyze_dist(self):
@@ -67,7 +69,7 @@ class key_loc_pair_list:
             pair.print_pair(masking_val)
 
 
-def generate_ciphertext(suspected_keylen = -1):
+def generate_ciphertext(suspected_keylen = -1, output_file = False):
     ciphertext = ""
     fname = ""
     for i in range(1, 6):
@@ -75,8 +77,9 @@ def generate_ciphertext(suspected_keylen = -1):
         fname += ".crypto"
         ciphertext += parse_file(fname, suspected_keylen)
     new_filename = str(suspected_keylen) + ".crypto"
-    with open(new_filename, "w") as f:
-        f.write(ciphertext)
+    if output_file:
+        with open(new_filename, "w") as f:
+            f.write(ciphertext)
     return ciphertext
 
 def parse_file(filename, suspected_keylen = -1):
@@ -116,15 +119,14 @@ def find_repeats(ciphertext, repeat_len):
     return key_loc_pairs
 
 def generate_repeat_list(masking_val = 1):
-    for j in range(16, 128):
-        pair_lists = []
-        for i in range(2, 16):
-            
-                #testing for each suspected keylength
-                pair_lists.append(find_repeats(generate_ciphertext(j), i))
-        for list in pair_lists:
-            list.print_all(masking_val)
-        return pair_lists
+    suspected_key_len = 24 #this can be interated over easily
+    pair_lists = []
+    for i in range(2, 16): #these are the min and max repeat lengths
+        #testing for each suspected keylength
+        pair_lists.append(find_repeats(generate_ciphertext(suspected_key_len), i))
+    for list in pair_lists:
+        list.print_all(masking_val)
+    return pair_lists
 
 pair_lists = generate_repeat_list(3)
 
