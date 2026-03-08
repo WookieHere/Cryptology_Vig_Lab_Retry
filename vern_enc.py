@@ -63,18 +63,18 @@ def encrypt_phrase(input_phrase, input_key):
     for i in range(0, len(input_phrase)):
         if input_phrase[i] != ' ' and ascii_map.count(input_phrase[i]) != 0:
             new_word += shift_letter(input_phrase[i], input_key[i % len(input_key)])
-    print(new_word)
+    #print(new_word)
     return new_word
 
 def gen_caesers(ciphertext, key_len):
     caesers = [caeser() for i in range(key_len)]
     index = 0
     for i in range(0, len(ciphertext)):
-        index += 1
         if ciphertext[i] == '~':
             index = 0
         else:
             caesers[index%key_len].insert_val(ciphertext[i])
+            index += 1
     return caesers
 
 def decrypt_with_key(ciphertext, key):
@@ -90,7 +90,7 @@ def generate_ciphertext():
         fname = str(i)
         fname += ".crypto"
         ciphertext += parse_file(fname)
-    print(ciphertext)
+    #print(ciphertext)
     return ciphertext
 
 def parse_file(filename):
@@ -148,9 +148,11 @@ for char in truth_dict:
     total += truth_dict[char]
 truth_map.set_char("a", truth_dict["a"], total)
 
+
 ciphertext = generate_ciphertext()
 test_caesers = []
-for i in range(16, 100):
+
+for i in range(17, 45):
     test_caesers.append(gen_caesers(ciphertext, i))
 #true_caeser = gen_caesers(stripped_text, 1)
 

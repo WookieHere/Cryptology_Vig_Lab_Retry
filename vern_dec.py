@@ -31,7 +31,7 @@ def vigenere_decrypt(ciphertext, key):
     key_indices = [ALPHABET.index(k) for k in key]
     index = 0
     for i, c in enumerate(ciphertext):
-        index += 1
+        
         if c == '~':
             index = 0
         elif c not in ALPHABET:
@@ -41,17 +41,25 @@ def vigenere_decrypt(ciphertext, key):
             k_idx = key_indices[index % len(key)]
             p_idx = (c_idx - k_idx) % ALPHABET_LEN
             plaintext.append(ALPHABET[p_idx])
+            index += 1
 
     return "".join(plaintext)
 
 def score_text(text, monograms):
     # gives a score to see how much the text looks like real swedish
     # higher score = more likely to be correct
+    """
     score = 0.0
     floor = 1e-10  # for unseen characters
 
     for c in text:
         score += math.log(monograms.get(c, floor))
+    """
+    score = 0.0
+    total_chars = len(text)
+    for char in ALPHABET:
+        score -= abs((text.count(char)/total_chars) - monograms[char])
+
 
     return score
 
@@ -79,22 +87,39 @@ def best_shift_for_column(column, monograms):
 def guess_key(ciphertext, key_length, monograms):
     # figures out what the key probably is by analyzing each column
     # splits the ciphertext into columns and finds the best shift for each
-    key = []
 
+    key = []
+    index = 0
+    column = ""
+    for j in range(0, key_length):
+        index = 0
+        for i in range(0, len(ciphertext)):
+            if ciphertext[i] == "~":
+                index = -1
+            elif (index + j) % key_length == 0: #every jth index 
+                column += ciphertext[i]
+            index += 1
+        shift = best_shift_for_column(column, monograms)
+        key.append(ALPHABET[shift])
+        column = ""
+
+
+    return "".join(key)
+"""
     for i in range(key_length):
         column = ciphertext[i::key_length]
         shift = best_shift_for_column(column, monograms)
         key.append(ALPHABET[shift])
+"""
+    
 
-    return "".join(key)
-
-def break_vigenere(ciphertext, monograms, max_key_len=16):
+def break_vigenere(ciphertext, monograms, max_key_len=64):
     # tries different key lengths and picks the one that gives the best result
     # this is the main function that cracks the cipher
     best_result = None
     best_score = float("-inf")
 
-    for key_len in range(1, max_key_len + 1):
+    for key_len in range(2, max_key_len + 1):
         key = guess_key(ciphertext, key_len, monograms)
         plaintext = vigenere_decrypt(ciphertext, key)
         score = score_text(plaintext, monograms) - 0.5 * key_len
@@ -166,11 +191,12 @@ def parse_file(filename):
     output = ""
     with open(filename, "r") as f:
         for line in f:
-            output += line
+            output += line.lower().replace(" ", "")
     output += "~"
     return output
 
 ciphertext = generate_ciphertext()
+ciphertext = parse_file("test.txt")
 monograms = load_monograms("swedish_monograms.txt")
 start_time = time.time()
 key_len, key, plaintext = break_vigenere(ciphertext, monograms)
