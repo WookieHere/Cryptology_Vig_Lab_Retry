@@ -88,7 +88,7 @@ def guess_key(ciphertext, key_length, monograms):
 
     return "".join(key)
 
-def break_vigenere(ciphertext, monograms, max_key_len=16):
+def break_vigenere(ciphertext, monograms, max_key_len=128):
     # tries different key lengths and picks the one that gives the best result
     # this is the main function that cracks the cipher
     best_result = None
@@ -153,34 +153,48 @@ for file_name, ciphertext in ciphertexts:
     print("Plaintext:", plaintext)
     print(f"Decryption time: {elapsed_time:.4f} seconds")
 """
-def generate_ciphertext():
+def generate_ciphertext(suspected_keylen):
     ciphertext = ""
     fname = ""
     for i in range(1, 6):
         fname = str(i)
         fname += ".crypto"
-        ciphertext += parse_file(fname)
+        ciphertext += parse_file(fname, suspected_keylen)
     return ciphertext
 
-def parse_file(filename):
-    output = ""
-    with open(filename, "r") as f:
-        for line in f:
-            output += line
-    output += "~"
-    return output
+def parse_file(filename, suspected_keylen = -1):
+    if suspected_keylen == -1:
+        output = ""
+        with open(filename, "r") as f:
+            for line in f:
+                output += line
+        output += "~"
+        return output
+    else:
+        output = ""
+        total_len = 0
+        with open(filename, "r") as f:
+            for line in f:
+                total_len += len(line)
+                output += line
+        #calc how much to trim off
+        amount_to_cut = total_len % suspected_keylen
+        output = output[:-1*amount_to_cut]
+        return output
 
-ciphertext = generate_ciphertext()
-monograms = load_monograms("swedish_monograms.txt")
-start_time = time.time()
-key_len, key, plaintext = break_vigenere(ciphertext, monograms)
-key = reduce_key(key)
-end_time = time.time()
-elapsed_time = end_time - start_time
+for i in range(16, 120):
+    ciphertext = generate_ciphertext(i)
+    monograms = load_monograms("swedish_monograms.txt")
+    start_time = time.time()
+    key_len, key, plaintext = break_vigenere(ciphertext, monograms)
+    key = reduce_key(key)
+    end_time = time.time()
+    elapsed_time = end_time - start_time
 
-#print(f"\nFile: {file_name}")
-print("Key length:", key_len)
-print("Key:", key)
-print("Plaintext:", plaintext)
-print(f"Decryption time: {elapsed_time:.4f} seconds")
+    #print(f"\nFile: {file_name}")
+    if key_len >= 16:
+        print("Key length:", key_len)
+        print("Key:", key)
+        print("Plaintext:", plaintext)
+        print(f"Decryption time: {elapsed_time:.4f} seconds")
 
